@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+# Move 'spring' all the way to the left
+spring:
+  profiles:
+    active: local
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5174"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      routes:
+        - id: threadly-user-authentication-service-public-routes
+          uri: lb://UserAuth
+          predicates:
+            - Path=/api/v1/auth/**
+
+        - id: threadly-user-authentication-service-private-routes
+          uri: lb://UserAuth
+          predicates:
+            - Path=/api/v1/users/**
+
+        - id: threadly-product-service-public-routes
+          uri: lb://product3
+          predicates:
+            - Path=/api/v1/products/**
+
+        - id: threadly-product-service-private-routes
+          uri: lb://product3
+          predicates:
+            - Path=/api/v1/admin/products/**
+          filters:
+            - name: RequireAdminRole
+
+        - id: threadly-order-and-cart-management
+          uri: lb://order-and-cart-management
+          predicates:
+            - Path=/api/v1/cart/**
+
